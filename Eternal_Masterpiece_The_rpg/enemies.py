@@ -4,7 +4,7 @@ from pygame.locals import *
 pygame.init()
 
 #player class
-class player(pygame.sprite.Sprite):
+class enemies(pygame.sprite.Sprite):
 	def __init__(self, texture, Map, wall, borders):
 		super().__init__()
 		
@@ -12,9 +12,9 @@ class player(pygame.sprite.Sprite):
 		self.texture=pygame.image.load(texture).convert_alpha()
 		self.texture=pygame.transform.scale(self.texture, (int(self.texture.get_width()*0.75), int(self.texture.get_height()*0.75)))
 		
-		#load player
+		#load enemies
 		self.rect=self.texture.get_rect()
-		self.rect.move_ip(48*3, 48*3)
+		self.rect.move_ip(48*4, 48*10)
 		
 		#base variables
 		self.life=10
@@ -30,9 +30,11 @@ class player(pygame.sprite.Sprite):
 		
 		#moving variables
 		self.move_step=0
-		self.step=24
+		self.step=48
 		self.moving=False
 		
+		self.player_pos_x=0
+		self.player_pos_y=0
 		
 		self.move_dir="down"
 		
@@ -45,38 +47,36 @@ class player(pygame.sprite.Sprite):
 		self.move_y=0
 		self.speed=int(48/self.step)
 		
+		#self.map_move_dir={"up":False, "down":False, "left":False, "right":False}
+		
 		#absolute position varaible
-		self.pos_x=4
-		self.pos_y=4
+		self.pos_x=5
+		self.pos_y=11
 		
 		#relativ position variables
-		self.rel_pos_x=4
-		self.rel_pos_y=4
+		self.rel_pos_x=0
+		self.rel_pos_y=0
 		
 		#map origin
 		self.map_x=0
 		self.map_y=0
-		
-		self.map_move_dir={"up":False, "down":False, "left":False, "right":False}
 		
 		#gui variables
 		self.pause=False
 		self.open_inventory=False
 		
 		#attack variables
-		self.hited=False
+		self.hit=False
 	
 	def move(self):
-	
+		
 		#get pressed key
 		pressed_key=pygame.key.get_pressed()
 		border=False
 		
 		if self.moving!=True:
-		
-			self.map_move_dir={"up":False, "down":False, "left":False, "right":False}
-		
-			if pressed_key[K_UP]:
+			
+			if self.player_pos_y<self.pos_y:
 				self.move_dir="up"
 				if self.map[self.pos_y][self.pos_x] in self.borders[0]:
 					border=True
@@ -86,7 +86,7 @@ class player(pygame.sprite.Sprite):
 					self.move_y=-self.speed
 					self.moving=True
 					
-			if pressed_key[K_DOWN]:
+			if self.player_pos_y>self.pos_y:
 				self.move_dir="down"
 				if self.map[self.pos_y][self.pos_x] in self.borders[1]:
 					self.border=True
@@ -96,7 +96,7 @@ class player(pygame.sprite.Sprite):
 					self.move_y=self.speed
 					self.moving=True
 				
-			if pressed_key[K_LEFT]:
+			if self.player_pos_x<self.pos_x:
 				self.move_dir="left"
 				if self.map[self.pos_y][self.pos_x] in self.borders[2]:
 					border=True
@@ -106,52 +106,41 @@ class player(pygame.sprite.Sprite):
 					self.move_x=-self.speed
 					self.moving=True
 					
-			if pressed_key[K_RIGHT]:
+			if self.player_pos_x>self.pos_x:
 				self.move_dir="right"
+				
+				#if self.pos_x==player_pos_x:
+				#	self.touch["right"]=True
+				
 				if self.map[self.pos_y][self.pos_x] in self.borders[3]:
 					border=True
-				if self.map[self.pos_y][self.pos_x+1] not in self.wall[3] and border!=True:
+				if self.map[self.pos_y][self.pos_x+1] not in self.wall[3] and border!=True:# and self.touch["right"]==True:
 					self.pos_x+=1
 					self.rel_pos_x+=1
 					self.move_x=self.speed
 					self.moving=True
-				
 			
 		else:
-			if self.rel_pos_x<7 and self.rel_pos_x>3:
-				self.rect.move_ip(self.move_x, 0)
-			if self.rel_pos_y<7 and self.rel_pos_y>3:
-				self.rect.move_ip(0, self.move_y)
-
-			if self.rel_pos_x>=7:
-				self.map_x-=self.speed
-				self.map_move_dir["right"]=True
-			if self.rel_pos_x<=3:
-				self.map_x+=self.speed
-				self.map_move_dir["left"]=True
 			
-			if self.rel_pos_y>=7:
-				self.map_y-=self.speed
-				self.map_move_dir["down"]=True
-			if self.rel_pos_y<=3:
-				self.map_y+=self.speed
-				self.map_move_dir["up"]=True
-
+			self.rect.move_ip(self.move_x, self.move_y)
+				
 			self.move_step+=1
 			if self.move_step==self.step:
-				if self.rel_pos_x>=7:
-					self.rel_pos_x-=1
-				if self.rel_pos_y>=7 :
-					self.rel_pos_y-=1
-				if self.rel_pos_x<=3:
-					self.rel_pos_x+=1
-				if self.rel_pos_y<=3:
-					self.rel_pos_y+=1
-					
+				
 				self.moving=False
 				self.move_step=0
 				self.move_x=0
 				self.move_y=0
+		
+		if self.map_move_dir["up"]==True:
+			self.rect.move_ip(0, 2)
+		if self.map_move_dir["down"]==True:
+			self.rect.move_ip(0, -2)
+				
+		if self.map_move_dir["left"]==True:
+			self.rect.move_ip(2, 0)
+		if self.map_move_dir["right"]==True:
+			self.rect.move_ip(-2, 0)
 				
 	def anim(self):
 		self.anim_delay+=1
@@ -179,42 +168,15 @@ class player(pygame.sprite.Sprite):
 		if self.anim_x>lim:
 			self.anim_x=0
 	
-	def gui(self):
+	def attack(self):
+		self.hit=False
+		if self.pos_x==self.player_pos_x and self.pos_y==self.player_pos_y:
+			return True
 	
-		pressed_key=pygame.key.get_pressed()
-
-		if pressed_key[K_e]:
-			if self.open_inventory==False:
-				self.open_inventory=True
-				self.pause=True
-			else:
-				self.open_inventory=False
-				self.pause=False
-		
-		if pressed_key[K_SPACE]:
-			if self.pause==False:
-				self.pause=True
-			else:
-				self.pause=False
-	
-	def get_damage(self, damage):
-		#if self.hited!=True:
-		self.life-=damage
-		self.hited=True
-		if self.life<=0:
-			print("Game over")
-			pygame.quit()
-			sys.exit()
-		
-		
-	"""
-	def atack(self, enemie_pos_x, enemie_pos_y):
-		pressed_key=pygame.key.get_pressed()
-		
-		if pressed_key[K_ENTER]:
-			print("boyor")
-			if self.pos_x>enemie_pos_x:
-	"""
+	def get_player_pos(self, pos_x, pos_y, map_move_dir):
+		self.player_pos_x=pos_x
+		self.player_pos_y=pos_y
+		self.map_move_dir=map_move_dir
 		
 		
 		
