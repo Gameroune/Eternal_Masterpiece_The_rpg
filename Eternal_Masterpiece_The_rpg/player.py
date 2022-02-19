@@ -65,6 +65,20 @@ class player(pygame.sprite.Sprite):
 		
 		#attack variables
 		self.hited=False
+		self.hit_delay=0
+	
+	def update(self):
+		self.move()
+		self.anim()
+		
+		if self.hited!=True:
+			self.hit_delay=0
+		
+		if self.hit_delay>=60 and self.hited==True:
+			self.hited=False
+			self.hit_delay=0
+			
+		self.hit_delay+=1
 	
 	def move(self):
 	
@@ -197,7 +211,8 @@ class player(pygame.sprite.Sprite):
 			else:
 				self.pause=False
 	
-	def get_damage(self, damage):
+	def get_damage(self, enemies_strength):
+		damage=int(enemies_strength/10)
 		#if self.hited!=True:
 		self.life-=damage
 		self.hited=True
@@ -207,14 +222,12 @@ class player(pygame.sprite.Sprite):
 			sys.exit()
 		
 		
-	"""
-	def atack(self, enemie_pos_x, enemie_pos_y):
+	
+	def attack(self, enemie_pos_x, enemie_pos_y):
 		pressed_key=pygame.key.get_pressed()
-		
-		if pressed_key[K_ENTER]:
-			print("boyor")
-			if self.pos_x>enemie_pos_x:
-	"""
+		if pressed_key[K_p]:
+			if self.pos_x<=enemie_pos_x+1 and self.pos_x>=enemie_pos_x-1 and self.pos_y<=enemie_pos_y+1 and self.pos_y>=enemie_pos_y-1:
+				return True
 		
 		
 		

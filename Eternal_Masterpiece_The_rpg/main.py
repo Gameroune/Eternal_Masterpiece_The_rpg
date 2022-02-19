@@ -57,18 +57,13 @@ obj=[[-1],
 	 [-1, -1, -1,117]] 
 
 #defining walls
-borders=[[' '],[' '],['48', '43'],['50','42']]
+borders=[[' '],[' '],['48', '40'],['50','42']]
 u_wall=['-1','58','56','74','72','73','46','57']
 d_wall=['-1','58','56','74','72','73','46','57']
 l_wall=['-1','58','56','74','72','73','46','57','50','42']
-r_wall=['-1','58','56','74','72','73','46','57','48','40','43']
+r_wall=['-1','58','56','74','72','73','46','57','48','40']
 
 wall=[u_wall, d_wall, l_wall, r_wall]
-
-#creating player
-player=player.player("textures/player/player_texture.png", Map, wall, borders)
-
-enemies=enemies.enemies("textures/enemies/orc_1.png", Map, wall, borders)
 
 #Map generation function
 def map_gen(Map, tileset, size, img_length, x_dep, y_dep):
@@ -91,6 +86,19 @@ def map_gen(Map, tileset, size, img_length, x_dep, y_dep):
 		j=0
 		i+=1
 
+#creating player
+player=player.player("textures/player/player_texture.png", Map, wall, borders)
+#creating enemie
+orc=enemies.enemies("textures/enemies/orc_1.png", Map, wall, borders)
+
+
+all_sprites=pygame.sprite.Group()
+all_sprites.add(player)
+all_sprites.add(orc)
+
+all_enemies=pygame.sprite.Group()
+all_enemies.add(orc)
+
 #main loop
 while True:
 
@@ -111,31 +119,24 @@ while True:
 		map_gen(Map, tileset, size, 8, player.map_x, player.map_y)
 		map_gen(obj, tileset, size, 8, player.map_x, player.map_y)
 		
-		#player functions
-		player.move()
-		player.anim()
+		for entity in all_sprites:
+			if entity in all_enemies:
+				entity.get_player_pos(player.pos_x, player.pos_y, player.map_move_dir)
+			entity.update()
+			displaySurf.blit(entity.texture, entity.rect, pygame.Rect(entity.anim_x*size, entity.anim_y*size, size, size))
 		
 		#enemies_function
-		enemies.get_player_pos(player.pos_x, player.pos_y, player.map_move_dir)
-		enemies.move()
-		enemies.anim()
+		for entity in all_enemies:
 		
-		#draw player
-		displaySurf.blit(player.texture, player.rect, pygame.Rect(player.anim_x*size, player.anim_y*size, size, size))
+			if player.attack(entity.pos_x, entity.pos_y) and entity.hited!=True:
+				entity.get_damage(int(player.strength))
+				entity.hited=True
 		
-		displaySurf.blit(enemies.texture, enemies.rect, pygame.Rect(enemies.anim_x*size, enemies.anim_y*size, size, size))
+			if entity.attack() and player.hited!=True:
+				player.get_damage(int(entity.strength))
+				player.hited=True
 		
-		if enemies.attack() and hited!=True:
-			player.get_damage(int(enemies.strength/10))
-			hited=True
-		
-		if hit_delay>=60:
-			hited=False
-			hit_delay=0
-			
-		hit_delay+=1
-		
-		#draw lif/mana
+		#draw life/mana
 		for i in range(player.life):
 			displaySurf.blit(life, (i*32, (screen_lenght-1)*48))
 		for i in range(player.mana):

@@ -38,6 +38,8 @@ class enemies(pygame.sprite.Sprite):
 		
 		self.move_dir="down"
 		
+		#self.map_move_dir={"up":False, "down":False, "left":False, "right":False}
+		
 		#moving animation variables
 		self.anim_x=0
 		self.anim_y=0
@@ -47,7 +49,7 @@ class enemies(pygame.sprite.Sprite):
 		self.move_y=0
 		self.speed=int(48/self.step)
 		
-		#self.map_move_dir={"up":False, "down":False, "left":False, "right":False}
+		self.touch={"up":False, "down":False, "left":False, "right":False}
 		
 		#absolute position varaible
 		self.pos_x=5
@@ -67,7 +69,22 @@ class enemies(pygame.sprite.Sprite):
 		
 		#attack variables
 		self.hit=False
+		self.hited=False
+		self.hit_delay=0
 	
+	def update(self):
+		self.move()
+		self.anim()	
+		
+		if self.hited!=True:
+			self.hit_delay=0
+		
+		if self.hit_delay>=60 and self.hited==True:
+			self.hited=False
+			self.hit_delay=0
+			
+		self.hit_delay+=1
+		
 	def move(self):
 		
 		#get pressed key
@@ -109,12 +126,12 @@ class enemies(pygame.sprite.Sprite):
 			if self.player_pos_x>self.pos_x:
 				self.move_dir="right"
 				
-				#if self.pos_x==player_pos_x:
-				#	self.touch["right"]=True
+				if self.pos_x==self.player_pos_x:
+					self.touch["right"]=True
 				
 				if self.map[self.pos_y][self.pos_x] in self.borders[3]:
 					border=True
-				if self.map[self.pos_y][self.pos_x+1] not in self.wall[3] and border!=True:# and self.touch["right"]==True:
+				if self.map[self.pos_y][self.pos_x+1] not in self.wall[3] and border!=True and self.touch["right"]==False:
 					self.pos_x+=1
 					self.rel_pos_x+=1
 					self.move_x=self.speed
@@ -170,13 +187,21 @@ class enemies(pygame.sprite.Sprite):
 	
 	def attack(self):
 		self.hit=False
-		if self.pos_x==self.player_pos_x and self.pos_y==self.player_pos_y:
+		if self.pos_x==self.player_pos_x and self.pos_y==self.player_pos_y and self.moving!=True:
 			return True
+	
+	def get_damage(self, enemies_strength):
+		damage=int(enemies_strength/10)
+		self.life-=damage
+		self.hited=True
+		if self.life<=0:
+			self.kill()
 	
 	def get_player_pos(self, pos_x, pos_y, map_move_dir):
 		self.player_pos_x=pos_x
 		self.player_pos_y=pos_y
 		self.map_move_dir=map_move_dir
+		
 		
 		
 		
